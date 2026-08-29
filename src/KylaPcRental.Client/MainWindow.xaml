@@ -1,0 +1,32 @@
+<Window x:Class="KylaPcRental.Client.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="KYLA PC RENTAL"
+        WindowStartupLocation="CenterScreen"
+        Background="#111111"
+        Foreground="White"
+        Width="900" Height="600">
+    <Grid Margin="40">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Text="KYLA PC RENTAL" FontSize="36" FontWeight="Bold"/>
+            <TextBlock Text="GAMING STATION 01" FontSize="18" Opacity="0.7" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="₱40 / HOUR" FontSize="22" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="1 HOUR&#x0a;₱40" Width="180" Height="110" Margin="8" FontSize="22" Click="OneHour_Click"/>
+                <Button Content="2 HOURS&#x0a;₱80" Width="180" Height="110" Margin="8" FontSize="22" Click="TwoHours_Click"/>
+                <Button Content="3 HOURS&#x0a;₱120" Width="180" Height="110" Margin="8" FontSize="22" Click="ThreeHours_Click"/>
+            </StackPanel>
+        </StackPanel>
+
+        <TextBlock Grid.Row="2" Text="V1 • Local Windows Client" HorizontalAlignment="Center" Opacity="0.5"/>
+    </Grid>
+</Window>
