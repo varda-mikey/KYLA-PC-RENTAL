@@ -1,13 +1,16 @@
 using System;
 using System.Windows;
 using System.Windows.Threading;
+using KylaPcRental.Client.Services;
 
 namespace KylaPcRental.Client;
 
 public partial class MainWindow : Window
 {
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(1) };
-    private TimeSpan _remaining;
+    private readonly RentalSession _session = new();
+    private readonly WindowsInputService _input = new();
+    private LockWindow? _lockWindow;
     private bool _sessionActive;
 
     public MainWindow()
@@ -18,31 +21,44 @@ public partial class MainWindow : Window
 
     private void StartSession(int hours)
     {
-        _remaining = TimeSpan.FromHours(hours);
+        _session.Start(hours);
         _sessionActive = true;
         _timer.Start();
-        MessageBox.Show($"Session started: {hours} hour(s).\n\nV1 timer engine is now running.", "KYLA PC RENTAL");
+        MessageBox.Show($"Session started: {hours} hour(s) — ₱{RentalSession.PriceForHours(hours):0}.", "KYLA PC RENTAL");
     }
 
     private void Timer_Tick(object? sender, EventArgs e)
     {
         if (!_sessionActive) return;
 
-        _remaining -= TimeSpan.FromSeconds(1);
-        if (_remaining <= TimeSpan.Zero)
+        _session.Tick(TimeSpan.FromSeconds(1));
+        if (_session.IsExpired)
         {
-            _remaining = TimeSpan.Zero;
             _timer.Stop();
             _sessionActive = false;
-            ShowExpiryNotice();
+            ExpireSession();
         }
     }
 
-    private void ShowExpiryNotice()
+    private void ExpireSession()
     {
-        MessageBox.Show(
-            "TIME EXPIRED\n\nThe next V1 step will replace this with the full-screen rental lock and extension screen.\n\nThe game process will not be closed by the rental client.",
-            "KYLA PC RENTAL");
+        // Best-effort pause request. The rental client never closes/kills the game.
+        _input.SendEscape();
+
+        _lockWindow = new LockWindow(_session, OnUnlocked)
+        {
+            Owner = this
+        };
+        _lockWindow.Show();
+        Hide();
+    }
+
+    private void OnUnlocked()
+    {
+        Show();
+        _sessionActive = true;
+        _timer.Start();
+        Activate();
     }
 
     private void OneHour_Click(object sender, RoutedEventArgs e) => StartSession(1);
