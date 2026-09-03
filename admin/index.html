@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08111f">
+<title>KYLA Admin</title>
+<style>
+:root{color-scheme:dark;--bg:#07101d;--panel:#0d1a2b;--panel2:#12233a;--line:#203754;--text:#f5f8ff;--muted:#9db0c9;--blue:#4e8cff;--good:#35c98a;--warn:#f4b942;--bad:#ff667a}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0,#10294c 0,transparent 35%),var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text)}button,input{font:inherit}.wrap{max-width:1180px;margin:auto;padding:24px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}.brand{display:flex;align-items:center;gap:13px}.logo{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#69a3ff,#2d5eea);display:grid;place-items:center;font-weight:900;box-shadow:0 12px 35px #1b56dd55}.brand h1{font-size:21px;margin:0}.brand p{margin:3px 0 0;color:var(--muted);font-size:13px}.chip{padding:8px 11px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:12px;background:#091523}.chip.good{color:#a8f3d2;border-color:#24775b;background:#0b2b22}.grid{display:grid;grid-template-columns:240px 1fr;gap:18px}.side,.card{border:1px solid var(--line);background:linear-gradient(180deg,#0e1c2e,#0b1726);border-radius:18px;box-shadow:0 18px 55px #0004}.side{padding:12px;height:max-content}.nav{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;color:var(--muted);margin:3px 0}.nav.active{background:#16345f;color:white}.nav small{margin-left:auto;color:#6f89a9}.content{display:grid;gap:18px}.card{padding:20px}.card h2{font-size:18px;margin:0 0 6px}.card p{color:var(--muted);margin:0;line-height:1.55}.hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.hero strong{font-size:28px;display:block;margin-top:14px}.statusline{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.mini{background:#0a1624;border:1px solid var(--line);padding:8px 10px;border-radius:10px;color:var(--muted);font-size:12px}.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}.field{margin-top:14px}.field label{display:block;font-size:12px;font-weight:700;color:#c8d5e6;margin-bottom:7px}.row{display:flex;gap:10px}.input{width:100%;border:1px solid #294363;background:#07111e;color:white;border-radius:11px;padding:12px 13px;outline:none}.input:focus{border-color:#4d8cff;box-shadow:0 0 0 3px #4d8cff22}.btn{border:0;border-radius:11px;padding:12px 15px;background:#3978f6;color:#fff;font-weight:800;cursor:pointer;white-space:nowrap}.btn:hover{filter:brightness(1.08)}.btn:disabled{opacity:.45;cursor:not-allowed}.btn.secondary{background:#172a42;border:1px solid #2b4668}.hint{font-size:12px;color:#8098b5;margin-top:9px;line-height:1.5}.drop{margin-top:15px;border:1.5px dashed #35577e;border-radius:16px;min-height:190px;display:grid;place-items:center;text-align:center;background:#071321;overflow:hidden;position:relative}.drop.has img{display:block}.drop img{width:100%;height:100%;max-height:390px;object-fit:contain;display:none;background:#050b13}.dropText{padding:30px}.dropText b{display:block;margin-bottom:6px}.drop input{position:absolute;inset:0;opacity:0;cursor:pointer}.actions{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}.msg{font-size:12px;color:var(--muted)}.msg.good{color:#87e8bc}.msg.bad{color:#ff93a0}.current{aspect-ratio:16/9;width:100%;margin-top:15px;border-radius:14px;border:1px solid var(--line);object-fit:contain;background:#050b13}.pending{border-left:3px solid var(--warn);padding:12px 14px;background:#171b1d;border-radius:8px;margin-top:14px;color:#d7cda8;font-size:13px}.footer{color:#66809e;text-align:center;font-size:11px;margin:22px 0 8px}@media(max-width:820px){.grid{grid-template-columns:1fr}.side{display:flex;overflow:auto}.nav{min-width:max-content}.two{grid-template-columns:1fr}.hero{display:block}.wrap{padding:15px}.top{align-items:flex-start}.chip{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><div class="logo">K</div><div><h1>KYLA ADMIN</h1><p>Independent control portal · hosted on GitHub</p></div></div>
+    <div id="topStatus" class="chip">GitHub not connected</div>
+  </div>
+  <div class="grid">
+    <aside class="side">
+      <div class="nav active">🖼️ Poster Control</div>
+      <div class="nav">🖥️ PC Control <small>migration</small></div>
+      <div class="nav">🎟️ Vouchers <small>migration</small></div>
+      <div class="nav">⚙️ Settings</div>
+    </aside>
+    <main class="content">
+      <section class="card hero">
+        <div><h2>Block Screen Marketing</h2><p>Upload once here. KYLA rental PCs automatically pull the latest poster from this GitHub repository.</p><strong>One poster → all KYLA PCs</strong><div class="statusline"><span class="mini">Recommended 1920 × 1080</span><span class="mini">JPG or PNG</span><span class="mini">Maximum 5 MB</span></div></div>
+        <button class="btn secondary" id="refreshPoster">Refresh preview</button>
+      </section>
+
+      <div class="two">
+        <section class="card">
+          <h2>1. Connect GitHub</h2>
+          <p>This static admin page needs permission to update only the poster file in your repo.</p>
+          <div class="field"><label>Fine-grained GitHub access token</label><div class="row"><input id="token" class="input" type="password" autocomplete="off" placeholder="github_pat_…"><button id="connect" class="btn">Connect</button></div></div>
+          <div class="hint">Use a fine-grained token for <b>varda-mikey/KYLA-PC-RENTAL</b> with <b>Contents: Read and write</b>. The token is kept only in this browser tab and is never uploaded into the repository.</div>
+          <div id="connectMsg" class="msg" style="margin-top:10px"></div>
+        </section>
+
+        <section class="card">
+          <h2>Current live poster</h2>
+          <p>This is the public poster file that the KYLA Windows service checks automatically.</p>
+          <img id="currentPoster" class="current" alt="No poster uploaded yet">
+          <div id="currentMsg" class="hint">Checking current poster…</div>
+        </section>
+      </div>
+
+      <section class="card">
+        <h2>2. Upload & Publish</h2>
+        <p>Choose the marketing artwork you want customers to see while the PC is blocked. The voucher box stays on top.</p>
+        <div id="drop" class="drop"><div id="dropText" class="dropText"><b>Tap or drop your poster here</b><span class="hint">JPG / PNG · landscape 16:9 is best</span></div><img id="preview" alt="Poster preview"><input id="file" type="file" accept="image/jpeg,image/png"></div>
+        <div class="actions"><button id="publish" class="btn" disabled>Upload & Publish Poster</button><button id="clear" class="btn secondary" disabled>Clear selection</button><span id="publishMsg" class="msg"></span></div>
+      </section>
+
+      <section class="card">
+        <h2>PC & Voucher Control</h2>
+        <p>The Windows client still uses your existing secure rental server for time, vouchers, maintenance and device status. I am keeping that logic untouched while the standalone admin connection is migrated.</p>
+        <div class="pending">Poster control is now independent from ChatGPT. PC/voucher controls will be connected here once the existing admin server endpoint is identified; no device token or voucher secret will be placed in GitHub Pages.</div>
+      </section>
+    </main>
+  </div>
+  <div class="footer">KYLA PC RENTAL · GitHub-hosted admin portal</div>
+</div>
+<script>
+const OWNER='varda-mikey',REPO='KYLA-PC-RENTAL',BRANCH='main',PATH='admin-data/block-poster.jpg';
+const API=`https://api.github.com/repos/${OWNER}/${REPO}`;
+const RAW=`https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${PATH}`;
+const $=id=>document.getElementById(id);
+let token=sessionStorage.getItem('kylaGithubToken')||'',selected=null;
+$('token').value=token;
+function authHeaders(){return {'Accept':'application/vnd.github+json','Authorization':`Bearer ${token}`,'X-GitHub-Api-Version':'2022-11-28'}}
+function setMsg(id,text,type=''){const el=$(id);el.textContent=text;el.className='msg '+type}
+async function connect(){token=$('token').value.trim();if(!token){setMsg('connectMsg','Paste your GitHub token first.','bad');return}setMsg('connectMsg','Checking access…');try{const r=await fetch(API,{headers:authHeaders()});if(!r.ok)throw new Error(`GitHub returned ${r.status}`);const data=await r.json();sessionStorage.setItem('kylaGithubToken',token);$('topStatus').textContent='GitHub connected';$('topStatus').className='chip good';setMsg('connectMsg',`Connected to ${data.full_name}.`,'good');$('publish').disabled=!selected}catch(e){setMsg('connectMsg',e.message,'bad');$('topStatus').textContent='GitHub not connected';$('topStatus').className='chip'}}
+$('connect').onclick=connect;
+async function refreshCurrent(){const img=$('currentPoster'),msg=$('currentMsg');msg.textContent='Checking current poster…';const url=RAW+'?v='+Date.now();try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('No poster uploaded yet');const blob=await r.blob();img.src=URL.createObjectURL(blob);msg.textContent='Live poster found. KYLA PCs will use this image.'}catch(e){img.removeAttribute('src');msg.textContent='No GitHub poster yet. Upload your first poster below.'}}
+$('refreshPoster').onclick=refreshCurrent;refreshCurrent();
+function choose(file){if(!file)return;if(!['image/jpeg','image/png'].includes(file.type)){setMsg('publishMsg','Use JPG or PNG only.','bad');return}if(file.size>5_000_000){setMsg('publishMsg','Poster is larger than 5 MB.','bad');return}selected=file;const u=URL.createObjectURL(file);$('preview').src=u;$('drop').classList.add('has');$('dropText').style.display='none';$('clear').disabled=false;$('publish').disabled=!token;setMsg('publishMsg',`${file.name} · ${(file.size/1024/1024).toFixed(2)} MB`)}
+$('file').onchange=e=>choose(e.target.files[0]);
+$('clear').onclick=()=>{selected=null;$('file').value='';$('preview').removeAttribute('src');$('drop').classList.remove('has');$('dropText').style.display='block';$('clear').disabled=true;$('publish').disabled=true;setMsg('publishMsg','')};
+['dragenter','dragover'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').style.borderColor='#69a3ff'}));
+['dragleave','drop'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').style.borderColor=''}));$('drop').addEventListener('drop',e=>choose(e.dataTransfer.files[0]));
+function toBase64(buf){const bytes=new Uint8Array(buf);let s='';for(let i=0;i<bytes.length;i+=0x8000)s+=String.fromCharCode(...bytes.subarray(i,Math.min(i+0x8000,bytes.length)));return btoa(s)}
+async function existingSha(){const r=await fetch(`${API}/contents/${PATH}?ref=${BRANCH}`,{headers:authHeaders()});if(r.status===404)return null;if(!r.ok)throw new Error(`Cannot read poster (${r.status})`);return (await r.json()).sha}
+$('publish').onclick=async()=>{if(!selected)return;if(!token){setMsg('publishMsg','Connect GitHub first.','bad');return}$('publish').disabled=true;setMsg('publishMsg','Uploading to GitHub…');try{const sha=await existingSha();const content=toBase64(await selected.arrayBuffer());const body={message:'Update KYLA block screen poster from admin',content,branch:BRANCH};if(sha)body.sha=sha;const r=await fetch(`${API}/contents/${PATH}`,{method:'PUT',headers:{...authHeaders(),'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok){let detail='';try{detail=(await r.json()).message||''}catch{}throw new Error(detail||`Upload failed (${r.status})`)}setMsg('publishMsg','Published. KYLA PCs will pull the new poster automatically.','good');setTimeout(refreshCurrent,1800)}catch(e){setMsg('publishMsg',e.message,'bad')}finally{$('publish').disabled=!selected||!token}};
+if(token)connect();
+</script>
+</body>
+</html>
