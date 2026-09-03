@@ -1,0 +1,30 @@
+name: Windows package
+on:
+  push:
+    branches: [main]
+    paths: ['windows/**', '.github/workflows/windows.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build Windows client
+        run: dotnet publish windows/Client/Kyla.Client.csproj -c Release -r win-x64 --self-contained true -o package/Client
+      - name: Build Windows service
+        run: dotnet publish windows/Agent/Kyla.Agent.csproj -c Release -r win-x64 --self-contained true -o package/Agent
+      - name: Include installation instructions
+        shell: pwsh
+        run: |
+          Copy-Item windows/scripts/* package/
+          Copy-Item windows/README.md package/START-HERE.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KYLA-Windows-x64
+          path: package/
+          retention-days: 30

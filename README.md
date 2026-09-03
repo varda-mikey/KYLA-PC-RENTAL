@@ -1,24 +1,13 @@
-# KYLA PC RENTAL
+# KYLA Piso Net
 
-Windows gaming-station rental system.
+Windows 11 rental client with a web admin dashboard and one-use vouchers.
 
-## V1 goals
-- ₱40/hour base rate
-- 1, 2, or 3 hour sessions
-- 15-minute and 5-minute warnings
-- Expiry sends ESC before locking the screen
-- Full-screen rental lock overlay
-- Game remains running in the background
-- 1/2/3-hour extensions
-- Admin PIN for operator controls
-- Local-first timer; internet is not required for the core session timer
+The current implementation is in `windows/`. Read [Windows setup](windows/README.md).
 
-## Planned architecture
-- Windows client: C# / .NET
-- Local rental/session engine
-- Full-screen lock overlay
-- Game launcher for games installed on an external SSD
-- Later: phone/admin controller over local Wi-Fi
+Download the self-contained Windows x64 package from the latest successful [Windows package workflow](../../actions). No .NET SDK is needed to run the published package.
 
-## Important behavior
-The rental client should lock the customer's interaction at expiry without intentionally closing or killing the game process. Game-specific pause behavior will be configurable because not every game treats `Esc` as pause.
+Features: centrally validated one-use vouchers, combined codes, additional time, five-minute warning, fullscreen blocker, background service recovery, admin maintenance, and protected pairing credentials.
+
+This is a supervised pilot. Windows 11 Home secure-desktop and game compatibility limitations still apply. Test on the actual rental PC before accepting payment.
+
+The previous prototype under `src/` is retained for history and is superseded. Do not use its free time buttons.
