@@ -10,13 +10,17 @@ using Microsoft.Extensions.Logging;
 namespace Kyla;
 public sealed class RentalAgent(ILogger<RentalAgent> log):BackgroundService {
  private readonly HttpClient http=new(new HttpClientHandler{AllowAutoRedirect=false}){Timeout=TimeSpan.FromSeconds(10)};
+ private readonly HttpClient posterHttp=new(){Timeout=TimeSpan.FromSeconds(10)};
  private readonly SemaphoreSlim gate=new(1,1);
+ private const string PosterUrl="https://raw.githubusercontent.com/varda-mikey/KYLA-PC-RENTAL/main/admin-data/block-poster.jpg";
+ private EntityTagHeaderValue? posterEtag;
  private Pairing config=null!;
  private long deadline,lastCloud;
  private bool maintenance,online;
  private string message="Connecting to rental server…";
  private readonly string folder=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),"KylaRental");
  private string PendingPath=>Path.Combine(folder,"pending.json");
+ private string PosterPath=>Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,"..","Client","block-poster.jpg"));
  private Command? pending;
  private Status Current(string? msg=null)=>new(Math.Max(0,deadline-Environment.TickCount64),maintenance&&Environment.TickCount64-lastCloud<30000,msg??message,online);
  protected override async Task ExecuteAsync(CancellationToken stop){
@@ -27,7 +31,7 @@ public sealed class RentalAgent(ILogger<RentalAgent> log):BackgroundService {
   http.DefaultRequestHeaders.Authorization=new AuthenticationHeaderValue("Bearer",config.DeviceToken);
   if(File.Exists(PendingPath))pending=JsonSerializer.Deserialize<Command>(await File.ReadAllTextAsync(PendingPath,stop),Wire.Json);
   // No persisted unlocked state: after a service/PC restart, get authoritative time online first.
-  await Task.WhenAll(PollCloud(stop),Listen(stop),WatchClient(stop));
+  await Task.WhenAll(PollCloud(stop),Listen(stop),WatchClient(stop),SyncPoster(stop));
  }
  private async Task PollCloud(CancellationToken stop){while(!stop.IsCancellationRequested){
   await gate.WaitAsync(stop);try{if(pending!=null)await Redeem(pending,stop);else await Refresh(stop);}catch(Exception ex)when(ex is not OperationCanceledException||!stop.IsCancellationRequested){online=false;message="Offline. Paid time keeps counting; reconnect to add a voucher.";log.LogWarning("Rental server unavailable: {Type}",ex.GetType().Name);}finally{gate.Release();}
@@ -48,6 +52,22 @@ public sealed class RentalAgent(ILogger<RentalAgent> log):BackgroundService {
   pending=null;File.Delete(PendingPath);message=error;
   if(response.StatusCode==HttpStatusCode.Unauthorized){deadline=0;maintenance=false;online=false;}
  }
+ private async Task SyncPoster(CancellationToken stop){while(!stop.IsCancellationRequested){
+  try{
+   using var request=new HttpRequestMessage(HttpMethod.Get,PosterUrl);
+   if(posterEtag!=null)request.Headers.IfNoneMatch.Add(posterEtag);
+   using var response=await posterHttp.SendAsync(request,HttpCompletionOption.ResponseHeadersRead,stop);
+   if(response.StatusCode==HttpStatusCode.NotModified||response.StatusCode==HttpStatusCode.NotFound){await Task.Delay(30000,stop);continue;}
+   response.EnsureSuccessStatusCode();
+   if(response.Content.Headers.ContentLength is long len&&len>5_000_000)throw new IOException("Poster is too large");
+   await using var input=await response.Content.ReadAsStreamAsync(stop);using var ms=new MemoryStream();var buffer=new byte[81920];
+   while(true){var read=await input.ReadAsync(buffer,stop);if(read==0)break;if(ms.Length+read>5_000_000)throw new IOException("Poster is too large");await ms.WriteAsync(buffer.AsMemory(0,read),stop);}
+   var bytes=ms.ToArray();bool jpeg=bytes.Length>4&&bytes[0]==0xFF&&bytes[1]==0xD8;bool png=bytes.Length>8&&bytes[0]==0x89&&bytes[1]==0x50&&bytes[2]==0x4E&&bytes[3]==0x47;
+   if(!jpeg&&!png)throw new IOException("Poster must be JPG or PNG");
+   Directory.CreateDirectory(Path.GetDirectoryName(PosterPath)!);var temp=PosterPath+".tmp";await File.WriteAllBytesAsync(temp,bytes,stop);File.Move(temp,PosterPath,true);posterEtag=response.Headers.ETag;
+  }catch(Exception ex)when(ex is not OperationCanceledException||!stop.IsCancellationRequested){log.LogDebug("Poster sync skipped: {Type}",ex.GetType().Name);}
+  await Task.Delay(30000,stop);
+ }}
  private async Task Listen(CancellationToken stop){
   var security=new PipeSecurity();security.SetAccessRuleProtection(true,false);
   security.AddAccessRule(new PipeAccessRule(new SecurityIdentifier(WellKnownSidType.LocalSystemSid,null),PipeAccessRights.FullControl,AccessControlType.Allow));
@@ -72,5 +92,5 @@ public sealed class RentalAgent(ILogger<RentalAgent> log):BackgroundService {
   var launcher=new InteractiveLauncher(config.CustomerSid,Path.Combine(AppContext.BaseDirectory,"..","Client","Kyla.Client.exe"));
   while(!stop.IsCancellationRequested){try{launcher.EnsureRunning();}catch(Exception ex){log.LogWarning("Unable to start customer screen: {Message}",ex.Message);}await Task.Delay(2000,stop);}
  }
- public override void Dispose(){http.Dispose();gate.Dispose();base.Dispose();}
+ public override void Dispose(){http.Dispose();posterHttp.Dispose();gate.Dispose();base.Dispose();}
 }
