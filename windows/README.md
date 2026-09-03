@@ -22,6 +22,18 @@ This invocation applies the script policy only to this process. It does not chan
 
 The downloaded pairing file is no longer needed after installation is verified; remove its unprotected downloaded copy. Do not put it in a shared folder or repository.
 
+## Block-screen marketing poster
+
+The zero-time / blocked screen can use a full-screen marketing image while keeping the existing voucher entry, redeem button, timer, and blocking behavior unchanged.
+
+- Use a 16:9 JPG, ideally **1920×1080**.
+- Name it exactly **`block-poster.jpg`**.
+- After installation, an administrator can place or replace it at **`C:\Program Files\KylaRental\Client\block-poster.jpg`**.
+- The customer account only needs read access to the installed client folder; the administrator controls poster replacement.
+- The running client checks for poster changes automatically. Replacing the file updates the marketing background without changing voucher data or rental time.
+- If the poster is missing or temporarily unreadable, KYLA falls back to the existing dark block screen.
+- The same poster is also used on additional monitor cover screens while the PC is blocked.
+
 ## Use
 
 - Sell a voucher generated in the dashboard. Codes are one use across all PCs belonging to that same admin account.
