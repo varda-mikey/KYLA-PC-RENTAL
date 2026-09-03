@@ -13,14 +13,18 @@ public sealed class RentalScreen:Form {
  private readonly List<Form> covers=[];
  private readonly Form hud=new(){FormBorderStyle=FormBorderStyle.None,TopMost=true,ShowInTaskbar=false,Size=new Size(295,48),BackColor=Color.FromArgb(15,26,46)};
  private readonly Button hudButton=new(){Dock=DockStyle.Fill,FlatStyle=FlatStyle.Flat,ForeColor=Color.White,BackColor=Color.FromArgb(15,26,46)};
+ private readonly string posterPath=Path.Combine(AppContext.BaseDirectory,"block-poster.jpg");
+ private Image? poster;
+ private DateTime posterStampUtc=DateTime.MinValue;
  private bool busy,locked=true,warningShown,extension,closing,arranged;
  private InputGuard? guard;
  private long remaining,lastStatus;
  private bool maintenance;
  private Command? retry;
  public RentalScreen(){
-  Text="KYLA Piso Net";BackColor=Color.FromArgb(7,12,22);ForeColor=Color.White;Font=new Font("Segoe UI",12);
+  Text="KYLA Piso Net";BackColor=Color.FromArgb(7,12,22);ForeColor=Color.White;Font=new Font("Segoe UI",12);BackgroundImageLayout=ImageLayout.Stretch;
   FormBorderStyle=FormBorderStyle.None;TopMost=true;ShowInTaskbar=false;StartPosition=FormStartPosition.Manual;KeyPreview=true;
+  panel.BackColor=Color.FromArgb(7,12,22);
   panel.Controls.Add(new Label{Text="KYLA PISO NET",AutoSize=true,ForeColor=Color.LightBlue,Margin=new Padding(0,0,0,25)});
   foreach(Control c in new Control[]{title,countdown,info,codes,redeem,back}){c.Margin=new Padding(0,8,0,8);panel.Controls.Add(c);}Controls.Add(panel);
   hud.Controls.Add(hudButton);hudButton.Click+=(_,_)=>{extension=true;Show();Activate();};
@@ -28,14 +32,28 @@ public sealed class RentalScreen:Form {
   redeem.Click+=async(_,_)=>await Redeem();
   FormClosing+=(_,e)=>{if(!closing&&e.CloseReason==CloseReason.UserClosing)e.Cancel=true;};
   Resize+=(_,_)=>CenterPanel();
-  Shown+=(_,_)=>{guard=new InputGuard(()=>locked);SetBlocked(true);timer.Start();};
+  Shown+=(_,_)=>{RefreshPoster(true);guard=new InputGuard(()=>locked);SetBlocked(true);timer.Start();};
   timer.Tick+=async(_,_)=>await Tick();
   Microsoft.Win32.SystemEvents.DisplaySettingsChanged+=DisplayChanged;
  }
  private void DisplayChanged(object? s,EventArgs e){if(!IsDisposed)BeginInvoke(()=>{RebuildCovers();LayoutScreen();});}
  private void CenterPanel(){panel.MaximumSize=new Size(Math.Max(250,ClientSize.Width-30),0);codes.Width=Math.Min(480,Math.Max(220,ClientSize.Width-70));info.MaximumSize=new Size(codes.Width,0);panel.Left=Math.Max(0,(ClientSize.Width-panel.Width)/2);panel.Top=Math.Max(0,(ClientSize.Height-panel.Height)/2);}
  private void LayoutScreen(){var screen=Screen.PrimaryScreen??Screen.AllScreens[0];Bounds=locked?screen.Bounds:new Rectangle(screen.WorkingArea.Left+Math.Max(0,(screen.WorkingArea.Width-650)/2),screen.WorkingArea.Top+40,Math.Min(650,screen.WorkingArea.Width),Math.Min(600,screen.WorkingArea.Height));hud.Location=new Point(screen.WorkingArea.Right-hud.Width-12,screen.WorkingArea.Top+12);CenterPanel();}
- private void RebuildCovers(){foreach(var c in covers)c.Dispose();covers.Clear();if(!locked)return;foreach(var screen in Screen.AllScreens.Where(s=>!s.Primary)){var c=new Form{BackColor=Color.Black,FormBorderStyle=FormBorderStyle.None,StartPosition=FormStartPosition.Manual,Bounds=screen.Bounds,TopMost=true,ShowInTaskbar=false};c.FormClosing+=(_,e)=>{if(!closing&&e.CloseReason==CloseReason.UserClosing)e.Cancel=true;};c.Show();covers.Add(c);}}
+ private void ApplyPoster(Form target){target.BackColor=Color.FromArgb(7,12,22);target.BackgroundImage=poster;target.BackgroundImageLayout=ImageLayout.Stretch;}
+ private void RefreshPoster(bool force=false){
+  try{
+   if(!File.Exists(posterPath)){
+    if(poster is null&&!force)return;
+    foreach(var c in covers)c.BackgroundImage=null;BackgroundImage=null;poster?.Dispose();poster=null;posterStampUtc=DateTime.MinValue;return;
+   }
+   var stamp=File.GetLastWriteTimeUtc(posterPath);if(!force&&poster is not null&&stamp==posterStampUtc)return;
+   using var fs=new FileStream(posterPath,FileMode.Open,FileAccess.Read,FileShare.ReadWrite|FileShare.Delete);
+   using var source=Image.FromStream(fs);var next=new Bitmap(source);var old=poster;poster=next;posterStampUtc=stamp;ApplyPoster(this);foreach(var c in covers)ApplyPoster(c);old?.Dispose();
+  }catch{
+   // Keep the current poster or dark fallback if an admin is in the middle of replacing the file.
+  }
+ }
+ private void RebuildCovers(){foreach(var c in covers)c.Dispose();covers.Clear();if(!locked)return;foreach(var screen in Screen.AllScreens.Where(s=>!s.Primary)){var c=new Form{FormBorderStyle=FormBorderStyle.None,StartPosition=FormStartPosition.Manual,Bounds=screen.Bounds,TopMost=true,ShowInTaskbar=false};ApplyPoster(c);c.FormClosing+=(_,e)=>{if(!closing&&e.CloseReason==CloseReason.UserClosing)e.Cancel=true;};c.Show();covers.Add(c);}}
  private void SetBlocked(bool value){bool changed=locked!=value||!IsHandleCreated;locked=value;back.Visible=!locked;title.Text=locked?"PLEASE ENTER YOUR VOUCHER":"EXTEND YOUR TIME";
   if(changed||!arranged){arranged=true;RebuildCovers();LayoutScreen();}
   if(locked){hud.Hide();if(!Visible)Show();WindowState=FormWindowState.Normal;TopMost=true;BringToFront();Activate();SetForegroundWindow(Handle);foreach(var c in covers)c.TopMost=true;}
@@ -44,6 +62,7 @@ public sealed class RentalScreen:Form {
  private async Task<Status> Send(Command cmd){using var ct=new CancellationTokenSource(14000);using var pipe=new NamedPipeClientStream(".",Wire.PipeName,PipeDirection.InOut,PipeOptions.Asynchronous);await pipe.ConnectAsync(ct.Token);await Wire.Write(pipe,cmd,ct.Token);return await Wire.Read<Status>(pipe,ct.Token);}
  private void Apply(Status s){remaining=s.RemainingMs;maintenance=s.Maintenance;lastStatus=Environment.TickCount64;if(!string.IsNullOrEmpty(s.Message))info.Text=s.Message;else info.Text="Buy a voucher from the admin. Enter one code per line.";if(remaining>300000)warningShown=false;}
  private async Task Tick(){
+  RefreshPoster();
   // Local rendering expires independently even while a cloud redemption is waiting.
   var left=Math.Max(0,remaining-(Environment.TickCount64-lastStatus));bool stale=Environment.TickCount64-lastStatus>16000;
   SetBlocked(stale||(!maintenance&&left<=0));
@@ -55,6 +74,6 @@ public sealed class RentalScreen:Form {
  private async Task Redeem(){if(busy)return;var list=codes.Text.Split(new[]{'\r','\n',',',';'},StringSplitOptions.RemoveEmptyEntries|StringSplitOptions.TrimEntries);if(list.Length==0||list.Length>20){info.Text="Enter 1–20 codes, one per line.";return;}
   busy=true;redeem.Enabled=false;try{retry??=new("redeem",list,Guid.NewGuid().ToString());var result=await Send(retry);Apply(result);retry=null;if(result.Message.StartsWith("Voucher accepted")){codes.Clear();extension=false;}}catch{info.Text="Checking your voucher. Retry this submission; time will not be added twice.";}finally{busy=false;redeem.Enabled=true;}
  }
- protected override void Dispose(bool disposing){if(disposing){closing=true;guard?.Dispose();timer.Dispose();Microsoft.Win32.SystemEvents.DisplaySettingsChanged-=DisplayChanged;foreach(var c in covers)c.Dispose();hud.Dispose();}base.Dispose(disposing);}
+ protected override void Dispose(bool disposing){if(disposing){closing=true;guard?.Dispose();timer.Dispose();Microsoft.Win32.SystemEvents.DisplaySettingsChanged-=DisplayChanged;foreach(var c in covers)c.Dispose();hud.Dispose();poster?.Dispose();}base.Dispose(disposing);}
  [DllImport("user32.dll")]private static extern bool SetForegroundWindow(IntPtr handle);
 }
