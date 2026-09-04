@@ -2,11 +2,9 @@
 param([string]$PairingFile,[string]$CustomerUser)
 $ErrorActionPreference='Stop'
 if (!$PairingFile) { $PairingFile=Read-Host 'Full path to kyla-pairing.json' }
-if (!$CustomerUser) { $CustomerUser=Read-Host 'Existing standard local Windows customer username' }
+if (!$CustomerUser) { $CustomerUser=Read-Host 'Existing Windows username to control with KYLA' }
 $user=Get-LocalUser -Name $CustomerUser
-if (!$user.Enabled) { throw 'Customer account must be enabled.' }
-$admins=Get-LocalGroupMember -SID 'S-1-5-32-544'
-if ($admins.SID.Value -contains $user.SID.Value) { throw 'Use a standard customer account, not an administrator.' }
+if (!$user.Enabled) { throw 'Selected Windows account must be enabled.' }
 $config=Get-Content -LiteralPath $PairingFile -Raw | ConvertFrom-Json
 if (([Uri]$config.BaseUrl).Scheme -ne 'https' -or $config.DeviceToken.Length -lt 32) { throw 'Invalid pairing file.' }
 # Verify pairing before enabling any screen protection.
@@ -25,10 +23,10 @@ if($LASTEXITCODE -ne 0){throw 'Unable to protect installation folder.'}
 Copy-Item -LiteralPath (Join-Path $source 'Agent'),(Join-Path $source 'Client') -Destination $install -Recurse -Force
 Copy-Item -Path (Join-Path $source '*-Kyla.ps1') -Destination $install -Force
 @{BaseUrl=$config.BaseUrl;DeviceToken=$config.DeviceToken;CustomerSid=$user.SID.Value} | ConvertTo-Json | Set-Content (Join-Path $data 'config.json') -Encoding UTF8
-New-Service -Name KylaRental -DisplayName 'KYLA Rental Protection' -BinaryPathName ('"'+(Join-Path $install 'Agent/Kyla.Agent.exe')+'"') -StartupType Automatic -Description 'Rental timer and recovery for the configured customer account.' | Out-Null
+New-Service -Name KylaRental -DisplayName 'KYLA Rental Protection' -BinaryPathName ('"'+(Join-Path $install 'Agent/Kyla.Agent.exe')+'"') -StartupType Automatic -Description 'Rental timer and recovery for the configured Windows account.' | Out-Null
 & sc.exe failure KylaRental reset= 86400 actions= restart/2000/restart/2000/restart/2000 | Out-Null
 & sc.exe failureflag KylaRental 1 | Out-Null
 Start-Service KylaRental
-Write-Host 'Installed. Sign in to the configured customer account and test a short voucher.' -ForegroundColor Green
+Write-Host 'Installed. Test phone +15 minutes before deliberately testing Lock.' -ForegroundColor Green
 Write-Host 'Keep the pairing file private; remove its downloaded copy after verifying installation.'
-Write-Host ('Emergency recovery: sign in as Windows admin and run '+(Join-Path $install 'Stop-Kyla.ps1'))
+Write-Host ('Emergency recovery: run '+(Join-Path $install 'Stop-Kyla.ps1')+' from an elevated Windows administrator session.')
