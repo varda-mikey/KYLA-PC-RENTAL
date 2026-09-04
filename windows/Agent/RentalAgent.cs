@@ -27,7 +27,8 @@ public sealed class RentalAgent(ILogger<RentalAgent> log):BackgroundService {
   config=JsonSerializer.Deserialize<Pairing>(await File.ReadAllTextAsync(Path.Combine(folder,"config.json"),stop),Wire.Json)??throw new InvalidOperationException("Missing pairing");
   if(!Uri.TryCreate(config.BaseUrl,UriKind.Absolute,out var baseUri)||baseUri.Scheme!="https"||!string.IsNullOrEmpty(baseUri.UserInfo))throw new InvalidOperationException("Pairing requires HTTPS");
   _=new SecurityIdentifier(config.CustomerSid);
-  http.BaseAddress=new Uri(baseUri.GetLeftPart(UriPartial.Authority)+"/");
+  var baseText=baseUri.AbsoluteUri.EndsWith("/",StringComparison.Ordinal)?baseUri.AbsoluteUri:baseUri.AbsoluteUri+"/";
+  http.BaseAddress=new Uri(baseText);
   http.DefaultRequestHeaders.Authorization=new AuthenticationHeaderValue("Bearer",config.DeviceToken);
   if(File.Exists(PendingPath))pending=JsonSerializer.Deserialize<Command>(await File.ReadAllTextAsync(PendingPath,stop),Wire.Json);
   // No persisted unlocked state: after a service/PC restart, get authoritative time online first.
